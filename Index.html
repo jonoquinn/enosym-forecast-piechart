@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Annual Enosym Revenue Projections</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --card-bg: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #cbd5e1;
+      --border-light: #e2e8f0;
+      --shade-header: #e2e8f0;
+      --shade-column: #f1f5f9;
+      --shade-label: #e2e8f0;
+      --accent-blue: #3b82f6;
+      --chart-net: #3b6fc2;
+      --chart-facility: #ed7d31;
+      --chart-royalty: #94a3b8;
+      --negative-red: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      padding: 32px 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header.page-header {
+      margin-bottom: 28px;
+    }
+
+    header.page-header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    header.page-header p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Top Section: Pie Chart on Left, Stacked Panels on Right */
+    .top-layout {
+      display: grid;
+      grid-template-columns: 1fr 410px;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 1060px) {
+      .top-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .right-panels {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    }
+
+    .chart-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Chart Header & Total Revenue Label */
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .chart-title-group h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .chart-title-group span {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .total-revenue-label {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 10px;
+      background-color: var(--shade-column);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 16px;
+    }
+
+    .total-revenue-label .tr-caption {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .total-revenue-label .tr-amount {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    .negative-warning {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--negative-red);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 430px;
+      width: 100%;
+    }
+
+    /* Right-hand Controls Styling */
+    .controls-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .controls-card h2 {
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    /* Adjacent Text Boxes Group */
+    .adjacent-boxes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .two-col-boxes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .field-box {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .field-box:focus-within {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .field-label {
+      display: block;
+      background-color: var(--shade-label);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .field-input {
+      width: 100%;
+      border: none;
+      padding: 9px 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text-primary);
+      background: #ffffff;
+      outline: none;
+    }
+
+    .field-input[readonly] {
+      background-color: #f8fafc;
+      color: var(--text-primary);
+      cursor: default;
+    }
+
+    select.field-input {
+      cursor: pointer;
+      text-align: center;
+      text-align-last: center;
+    }
+
+    /* Horizontal Box for Monthly Franchise Fee */
+    .horizontal-field-box {
+      display: grid;
+      grid-template-columns: 1fr 135px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .horizontal-field-box:focus-within {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .horizontal-field-box .field-label {
+      border-bottom: none;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 9px 14px;
+      font-size: 0.86rem;
+    }
+
+    .assumptions-note {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      background-color: var(--shade-column);
+      padding: 11px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--border-light);
+      line-height: 1.45;
+    }
+
+    /* Bottom Table Section */
+    .table-card h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    table.projection-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    table.projection-table th,
+    table.projection-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+      border-right: 1px solid var(--border-light);
+      text-align: right;
+    }
+
+    table.projection-table th:last-child,
+    table.projection-table td:last-child {
+      border-right: none;
+    }
+
+    table.projection-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Shaded Table Header Row */
+    table.projection-table thead th {
+      background-color: var(--shade-header);
+      color: var(--text-primary);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.projection-table thead th:first-child {
+      text-align: left;
+    }
+
+    table.projection-table thead th:nth-child(2),
+    table.projection-table tbody td:nth-child(2) {
+      text-align: center;
+    }
+
+    /* Shaded & Bolded Service Column */
+    table.projection-table tbody td.service-col {
+      background-color: var(--shade-column);
+      font-weight: 700;
+      text-align: left;
+      color: var(--text-primary);
+      border-right: 1px solid var(--border-color);
+    }
+
+    table.projection-table tbody tr:hover td:not(.service-col) {
+      background-color: #f8fafc;
+    }
+
+    .negative-val {
+      color: var(--negative-red);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="page-header">
+    <h1>Annual Enosym Revenue Projections</h1>
+    <p>Interactive annual financial breakdown for a single advisory rate</p>
+  </header>
+
+  <!-- Top Section: Pie Chart & Right-Hand Stacked Parameter Panels -->
+  <div class="top-layout">
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h2 id="chartSubheader">Advisory Rate Breakdown (€100/hr)</h2>
+          <span>Annual net revenue and recurring franchise costs</span>
+        </div>
+        <!-- Total Revenue Displayed as a Label -->
+        <div class="total-revenue-label">
+          <span class="tr-caption">Total Revenue</span>
+          <span class="tr-amount" id="totalRevenueLabel">€176,000</span>
+        </div>
+      </div>
+
+      <div id="negativeWarning" class="negative-warning"></div>
+
+      <div class="chart-wrapper">
+        <canvas id="enosymPieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Right-hand Column: Projection Parameters + Break Even Panel -->
+    <div class="right-panels">
+      <!-- Panel 1: Projection Parameters -->
+      <div class="card controls-card">
+        <h2>Projection Parameters</h2>
+
+        <!-- Updatable Adjacent Boxes: Days Worked, Hours Worked, Weeks Worked -->
+        <div class="adjacent-boxes">
+          <div class="field-box">
+            <label class="field-label" for="daysWorked">Days worked</label>
+            <input type="number" id="daysWorked" class="field-input" value="220" min="0" max="365" step="any" />
+          </div>
+
+          <div class="field-box">
+            <label class="field-label" for="hoursWorked">Hours worked</label>
+            <input type="number" id="hoursWorked" class="field-input" value="1760" min="0" max="2920" step="any" />
+          </div>
+
+          <div class="field-box">
+            <label class="field-label" for="weeksWorked">Weeks worked</label>
+            <input type="number" id="weeksWorked" class="field-input" value="44" min="0" max="73" step="any" />
+          </div>
+        </div>
+
+        <!-- Advisory Rate & Currency Selector -->
+        <div class="two-col-boxes">
+          <div class="field-box">
+            <label class="field-label" for="advisoryRate" id="advisoryRateLabel">Advisory Rate (€/hr)</label>
+            <input type="number" id="advisoryRate" class="field-input" value="100" min="0" step="any" />
+          </div>
+
+          <div class="field-box">
+            <label class="field-label" for="currencySelect">Currency</label>
+            <select id="currencySelect" class="field-input">
+              <option value="EUR" selected>Euros (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Shaded Monthly Franchise Fee Numeric Text Entry Box -->
+        <div class="horizontal-field-box">
+          <label class="field-label" for="monthlyFranchiseFee" id="monthlyFranchiseFeeLabel">Monthly Franchise Fee (€)</label>
+          <input type="text" id="monthlyFranchiseFee" class="field-input" value="750" inputmode="decimal" />
+        </div>
+
+        <div class="assumptions-note">
+          Assumes an <strong>8-hour</strong> working day, <strong>5 working days</strong> per week, and a <strong>€15/hr</strong> revenue royalty fee.
+          <span id="exchangeRateNote">Exchange rate: <strong>1 EURO = 0.84 GBP</strong> (loading live rate from api.frankfurter.dev...).</span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Break Even for Time Work @ X -->
+      <div class="card controls-card">
+        <h2 id="breakEvenTitle">Break Even for Time Work @ €100/hr</h2>
+
+        <div class="adjacent-boxes">
+          <div class="field-box">
+            <label class="field-label" for="breakEvenDays">Days</label>
+            <input type="text" id="breakEvenDays" class="field-input" readonly />
+          </div>
+
+          <div class="field-box">
+            <label class="field-label" for="breakEvenHours">Hours</label>
+            <input type="text" id="breakEvenHours" class="field-input" readonly />
+          </div>
+
+          <div class="field-box">
+            <label class="field-label" for="breakEvenWeeks">Weeks</label>
+            <input type="text" id="breakEvenWeeks" class="field-input" readonly />
+          </div>
+        </div>
+
+        <div class="assumptions-note" id="breakEvenNote">
+          Minimum billable time required to cover the annual franchise fee and hourly revenue royalty fee (Net Revenue = €0).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Section: Revenue Projections Table -->
+  <div class="card table-card">
+    <h2>Annual Financial Breakdown</h2>
+    <div class="table-container">
+      <table class="projection-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Advisory Rate</th>
+            <th>Gross</th>
+            <th>Net</th>
+            <th>Facility Fee</th>
+            <th>Revenue Royalty Fee</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody">
+          <!-- Populated dynamically via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =========================================================================
+  // ENOSYM FRANCHISEE MANUAL CONSTANTS & EXCHANGE RATE STATE
+  // =========================================================================
+  const HOURS_PER_DAY = 8;
+  const DAYS_PER_WEEK = 5;
+  const HOURS_PER_WEEK = HOURS_PER_DAY * DAYS_PER_WEEK; // 40 hours/week
+  const MONTHS_PER_YEAR = 12;
+  const ROYALTY_PER_HOUR_EUR = 15; // €15 per billed hour
+  const DEFAULT_EUR_TO_GBP_RATE = 0.84; // Fallback conversion: 1 EURO = 0.84 GBP
+  const API_TIMEOUT_MS = 5000;
+
+  // Active exchange rate (initialized to default fallback until Frankfurter responds)
+  let currentEurToGbpRate = DEFAULT_EUR_TO_GBP_RATE;
+
+  // Threshold: segments strictly less than 5% appear as connected outside labels
+  const OUTSIDE_LABEL_THRESHOLD = 0.05;
+
+  // Get active currency symbol
+  function getCurrencySymbol() {
+    const curr = document.getElementById('currencySelect').value;
+    return curr === 'GBP' ? '£' : '€';
+  }
+
+  // Format currency values in EUR or GBP (supports negative numbers)
+  function formatCurrency(amount) {
+    const symbol = getCurrencySymbol();
+    const rounded = Math.round(amount);
+    if (rounded < 0) {
+      return '-' + symbol + Math.abs(rounded).toLocaleString('en-IE');
+    }
+    return symbol + rounded.toLocaleString('en-IE');
+  }
+
+  // Cleanly format numeric input values
+  function formatCleanNumber(val) {
+    return Number(val.toFixed(2));
+  }
+
+  // Format break-even numbers to 1 decimal place (or integer if exact)
+  function formatBreakEvenMetric(val) {
+    const rounded = Math.round(val * 10) / 10;
+    return Number.isInteger(rounded) ? rounded.toLocaleString('en-IE') : rounded.toFixed(1);
+  }
+
+  // =========================================================================
+  // FETCH LIVE EXCHANGE RATE FROM FRANKFURTER (api.frankfurter.dev)
+  // =========================================================================
+  async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      return await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function loadExchangeRateFromFrankfurter() {
+    const rateNoteEl = document.getElementById('exchangeRateNote');
+
+    try {
+      let eurToGbp = null;
+      let rateDate = '';
+
+      // Try Frankfurter v1 endpoint first, then v2 endpoint if needed
+      try {
+        const dataV1 = await fetchWithTimeout(
+          'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=GBP',
+          API_TIMEOUT_MS
+        );
+        if (dataV1 && dataV1.rates && typeof dataV1.rates.GBP === 'number' && dataV1.rates.GBP > 0) {
+          eurToGbp = dataV1.rates.GBP;
+          rateDate = dataV1.date || '';
+        }
+      } catch (_) {
+        const dataV2 = await fetchWithTimeout(
+          'https://api.frankfurter.dev/v2/rate/EUR/GBP',
+          API_TIMEOUT_MS
+        );
+        if (dataV2 && typeof dataV2.rate === 'number' && dataV2.rate > 0) {
+          eurToGbp = dataV2.rate;
+          rateDate = dataV2.date || '';
+        }
+      }
+
+      if (eurToGbp && eurToGbp > 0) {
+        currentEurToGbpRate = eurToGbp;
+        const gbpToEur = 1 / currentEurToGbpRate;
+        const dateSuffix = rateDate ? ` as of ${rateDate}` : '';
+        rateNoteEl.innerHTML =
+          `Live exchange rate (api.frankfurter.dev${dateSuffix}): <strong>1 EURO = ${currentEurToGbpRate.toFixed(4)} GBP</strong> (1 GBP = ${gbpToEur.toFixed(4)} EURO).`;
+      } else {
+        throw new Error('Invalid rate payload from Frankfurter API');
+      }
+    } catch (error) {
+      // Fallback to default supplied rate if API is unavailable or times out
+      currentEurToGbpRate = DEFAULT_EUR_TO_GBP_RATE;
+      rateNoteEl.innerHTML =
+        `Default currency conversion (API unavailable/timed out): <strong>1 EURO = ${DEFAULT_EUR_TO_GBP_RATE} GBP</strong>.`;
+    }
+
+    updateView();
+  }
+
+  // =========================================================================
+  // SYNCHRONIZE WORK METRIC INPUTS (DAYS, HOURS, WEEKS)
+  // =========================================================================
+  function syncWorkInputs(sourceId) {
+    const daysEl = document.getElementById('daysWorked');
+    const hoursEl = document.getElementById('hoursWorked');
+    const weeksEl = document.getElementById('weeksWorked');
+
+    if (sourceId === 'daysWorked') {
+      const days = Math.max(0, parseFloat(daysEl.value) || 0);
+      hoursEl.value = formatCleanNumber(days * HOURS_PER_DAY);
+      weeksEl.value = formatCleanNumber(days / DAYS_PER_WEEK);
+    } else if (sourceId === 'hoursWorked') {
+      const hours = Math.max(0, parseFloat(hoursEl.value) || 0);
+      const days = hours / HOURS_PER_DAY;
+      daysEl.value = formatCleanNumber(days);
+      weeksEl.value = formatCleanNumber(days / DAYS_PER_WEEK);
+    } else if (sourceId === 'weeksWorked') {
+      const weeks = Math.max(0, parseFloat(weeksEl.value) || 0);
+      const days = weeks * DAYS_PER_WEEK;
+      daysEl.value = formatCleanNumber(days);
+      hoursEl.value = formatCleanNumber(weeks * HOURS_PER_WEEK);
+    }
+    updateView();
+  }
+
+  // =========================================================================
+  // COMPUTE PROJECTION & BREAK-EVEN METRICS
+  // =========================================================================
+  function computeMetrics() {
+    const annualHours = Math.max(0, parseFloat(document.getElementById('hoursWorked').value) || 0);
+    const advisoryRate = Math.max(0, parseFloat(document.getElementById('advisoryRate').value) || 0);
+    const monthlyFranchiseFee = Math.max(0, parseFloat(document.getElementById('monthlyFranchiseFee').value) || 0);
+    const currency = document.getElementById('currencySelect').value;
+    const symbol = getCurrencySymbol();
+
+    // Update dynamic currency unit labels
+    document.getElementById('advisoryRateLabel').textContent = `Advisory Rate (${symbol}/hr)`;
+    document.getElementById('monthlyFranchiseFeeLabel').textContent = `Monthly Franchise Fee (${symbol})`;
+
+    // Annual Franchise/Facility Fee is 12x the Monthly Franchise Fee entered in the active currency
+    const facilityFee = monthlyFranchiseFee * MONTHS_PER_YEAR;
+
+    // Convert the €15/hr Revenue Royalty Fee to GBP if GBP is selected
+    const conversionFactor = currency === 'GBP' ? currentEurToGbpRate : 1;
+    const hourlyRoyaltyRate = ROYALTY_PER_HOUR_EUR * conversionFactor;
+    const royaltyFee = annualHours * hourlyRoyaltyRate;
+
+    const gross = annualHours * advisoryRate;
+    const net = gross - facilityFee - royaltyFee;
+
+    // Break-Even Calculation:
+    // Net = 0  =>  Hours * (AdvisoryRate - HourlyRoyaltyRate) = FacilityFee
+    const netContributionPerHour = advisoryRate - hourlyRoyaltyRate;
+    let beHours = null;
+    let beDays = null;
+    let beWeeks = null;
+
+    if (netContributionPerHour > 0) {
+      beHours = facilityFee / netContributionPerHour;
+      beDays = beHours / HOURS_PER_DAY;
+      beWeeks = beDays / DAYS_PER_WEEK;
+    }
+
+    return {
+      role: 'Advisory Service',
+      rate: advisoryRate,
+      hourlyRoyaltyRate: hourlyRoyaltyRate,
+      gross: gross,
+      net: net,
+      facilityFee: facilityFee,
+      royaltyFee: royaltyFee,
+      beHours: beHours,
+      beDays: beDays,
+      beWeeks: beWeeks
+    };
+  }
+
+  // =========================================================================
+  // UNIFIED PLUGIN: INSIDE LABELS (>= 5%) & CONNECTED OUTSIDE LABELS (< 5%)
+  // =========================================================================
+  const pieSegmentLabelsPlugin = {
+    id: 'pieSegmentLabels',
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(0);
+      const dataset = chart.data.datasets[0];
+      if (!meta || !meta.data || meta.data.length === 0) return;
+
+      // Calculate total of visible positive slices
+      let total = 0;
+      dataset.data.forEach((val, idx) => {
+        if (chart.getDataVisibility(idx) && val > 0) {
+          total += val;
+        }
+      });
+      if (total <= 0) return;
+
+      const ctx = chart.ctx;
+      ctx.save();
+
+      const externalCallouts = [];
+
+      meta.data.forEach((arcElement, index) => {
+        if (!chart.getDataVisibility(index)) return;
+        const value = dataset.data[index];
+        if (!value || value <= 0) return;
+
+        // Read current rendered geometry on canvas
+        const { x, y, startAngle, endAngle, innerRadius, outerRadius } = arcElement.getProps(
+          ['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius'],
+          false
+        );
+
+        if (!outerRadius || outerRadius <= 0) return;
+
+        const share = value / total;
+        const midAngle = (startAngle + endAngle) / 2;
+        const cosA = Math.cos(midAngle);
+        const sinA = Math.sin(midAngle);
+
+        if (share >= OUTSIDE_LABEL_THRESHOLD) {
+          // -----------------------------------------------------------------
+          // SEGMENT >= 5%: DRAW LABEL INSIDE THE SEGMENT
+          // Push slightly further toward outer rim when slice is between 5% and 12%
+          // -----------------------------------------------------------------
+          const radialFactor = share < 0.12 ? 0.68 : 0.58;
+          const labelRadius = innerRadius + (outerRadius - innerRadius) * radialFactor;
+          const labelX = x + cosA * labelRadius;
+          const labelY = y + sinA * labelRadius;
+
+          ctx.font = '700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.fillStyle = index === 2 ? '#0f172a' : '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(formatCurrency(value), labelX, labelY);
+        } else {
+          // -----------------------------------------------------------------
+          // SEGMENT < 5%: QUEUE CONNECTED CALLOUT LABEL OUTSIDE THE SEGMENT
+          // -----------------------------------------------------------------
+          const startX = x + cosA * outerRadius;
+          const startY = y + sinA * outerRadius;
+          const radialDist = outerRadius + 18;
+          const rawElbowX = x + cosA * radialDist;
+          const rawElbowY = y + sinA * radialDist;
+          const isRightSide = cosA >= 0;
+
+          const sliceColor = Array.isArray(dataset.backgroundColor)
+            ? dataset.backgroundColor[index]
+            : '#334155';
+
+          externalCallouts.push({
+            index,
+            value,
+            label: chart.data.labels[index],
+            startX,
+            startY,
+            elbowX: rawElbowX,
+            elbowY: rawElbowY,
+            isRightSide,
+            sliceColor
+          });
+        }
+      });
+
+      // Prevent vertical overlap among external callouts on the same side
+      ['left', 'right'].forEach(side => {
+        const isRight = side === 'right';
+        const group = externalCallouts
+          .filter(c => c.isRightSide === isRight)
+          .sort((a, b) => a.elbowY - b.elbowY);
+
+        const minGap = 24;
+        const minY = 20;
+        const maxY = chart.height - 54;
+
+        for (let i = 0; i < group.length; i++) {
+          if (group[i].elbowY < minY) group[i].elbowY = minY;
+          if (i > 0 && group[i].elbowY - group[i - 1].elbowY < minGap) {
+            group[i].elbowY = group[i - 1].elbowY + minGap;
+          }
+          if (group[i].elbowY > maxY) group[i].elbowY = maxY;
+        }
+      });
+
+      // Draw each external connected callout with canvas-boundary clamping
+      ctx.font = '600 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const edgeMargin = 10;
+      const textGap = 6;
+
+      externalCallouts.forEach(item => {
+        const labelText = `${item.label}: ${formatCurrency(item.value)}`;
+        const textWidth = ctx.measureText(labelText).width;
+
+        let elbowX = item.elbowX;
+        let endX = elbowX + (item.isRightSide ? 16 : -16);
+
+        // Clamp horizontal leader line & elbow so text never clips off the left or right canvas border
+        if (item.isRightSide) {
+          const maxEndX = chart.width - edgeMargin - textGap - textWidth;
+          if (endX > maxEndX) {
+            endX = Math.max(item.startX + 4, maxEndX);
+            if (elbowX > endX) elbowX = endX;
+          }
+        } else {
+          const minEndX = edgeMargin + textGap + textWidth;
+          if (endX < minEndX) {
+            endX = Math.min(item.startX - 4, minEndX);
+            if (elbowX < endX) elbowX = endX;
+          }
+        }
+
+        // Connected leader line
+        ctx.beginPath();
+        ctx.moveTo(item.startX, item.startY);
+        ctx.lineTo(elbowX, item.elbowY);
+        ctx.lineTo(endX, item.elbowY);
+        ctx.strokeStyle = item.sliceColor;
+        ctx.lineWidth = 1.75;
+        ctx.stroke();
+
+        // Anchor dot on slice edge
+        ctx.beginPath();
+        ctx.arc(item.startX, item.startY, 2.8, 0, Math.PI * 2);
+        ctx.fillStyle = item.sliceColor;
+        ctx.fill();
+
+        // Label text outside the segment
+        ctx.fillStyle = '#0f172a';
+        ctx.textAlign = item.isRightSide ? 'left' : 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, endX + (item.isRightSide ? textGap : -textGap), item.elbowY);
+      });
+
+      ctx.restore();
+    }
+  };
+
+  Chart.register(pieSegmentLabelsPlugin);
+
+  // =========================================================================
+  // INITIALIZE PIE CHART WITH INITIAL METRICS
+  // =========================================================================
+  const initialMetrics = computeMetrics();
+  const ctx = document.getElementById('enosymPieChart').getContext('2d');
+
+  const enosymPieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: [
+        'Annual Net Revenue',
+        'Annual Facility Fee',
+        'Annual Revenue Royalty Fee'
+      ],
+      datasets: [
+        {
+          data: [
+            Math.max(0, initialMetrics.net),
+            initialMetrics.facilityFee,
+            initialMetrics.royaltyFee
+          ],
+          backgroundColor: [
+            '#3b6fc2', // Annual Net Revenue
+            '#ed7d31', // Annual Facility Fee
+            '#94a3b8'  // Annual Revenue Royalty Fee
+          ],
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverOffset: 8
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 40,
+          bottom: 16,
+          left: 195,
+          right: 195
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 14,
+            boxHeight: 14,
+            padding: 20,
+            color: '#334155',
+            font: {
+              size: 12.5,
+              weight: '600'
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const rawVal = context.raw || 0;
+              const total = context.dataset.data.reduce((acc, v) => acc + (v > 0 ? v : 0), 0);
+              const pct = total > 0 ? ((rawVal / total) * 100).toFixed(1) : '0.0';
+              return `${label}: ${formatCurrency(rawVal)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // =========================================================================
+  // DYNAMIC VIEW UPDATE
+  // =========================================================================
+  function updateView() {
+    const metrics = computeMetrics();
+    const symbol = getCurrencySymbol();
+    const rateFormatted = `${symbol}${formatCleanNumber(metrics.rate)}/hr`;
+
+    // Update Chart Header & Total Revenue Label
+    document.getElementById('chartSubheader').textContent =
+      `Advisory Rate Breakdown (${rateFormatted})`;
+    document.getElementById('totalRevenueLabel').textContent = formatCurrency(metrics.gross);
+
+    // Update Break Even Panel Title & Values
+    document.getElementById('breakEvenTitle').textContent =
+      `Break Even for Time Work @ ${rateFormatted}`;
+
+    const beNoteEl = document.getElementById('breakEvenNote');
+    if (metrics.beHours !== null) {
+      document.getElementById('breakEvenDays').value = formatBreakEvenMetric(metrics.beDays);
+      document.getElementById('breakEvenHours').value = formatBreakEvenMetric(metrics.beHours);
+      document.getElementById('breakEvenWeeks').value = formatBreakEvenMetric(metrics.beWeeks);
+      beNoteEl.innerHTML =
+        `Minimum billable time required to cover the annual franchise fee and hourly revenue royalty fee (Net Revenue = ${symbol}0).`;
+    } else {
+      document.getElementById('breakEvenDays').value = 'N/A';
+      document.getElementById('breakEvenHours').value = 'N/A';
+      document.getElementById('breakEvenWeeks').value = 'N/A';
+      beNoteEl.innerHTML =
+        `<span class="negative-val">Break-even cannot be reached when the Advisory Rate is at or below the ${symbol}${formatCleanNumber(metrics.hourlyRoyaltyRate)}/hr royalty fee.</span>`;
+    }
+
+    // Handle negative Net Revenue notice if recurring costs exceed gross revenue
+    const warningEl = document.getElementById('negativeWarning');
+    if (metrics.net < 0) {
+      warningEl.style.display = 'block';
+      warningEl.textContent =
+        `Note: Recurring annual costs exceed gross revenue, resulting in a negative Annual Net Revenue of ${formatCurrency(metrics.net)}.`;
+    } else {
+      warningEl.style.display = 'none';
+    }
+
+    // Update Pie Chart Dataset
+    enosymPieChart.data.datasets[0].data = [
+      Math.max(0, metrics.net),
+      metrics.facilityFee,
+      metrics.royaltyFee
+    ];
+    enosymPieChart.update();
+
+    // Update Table
+    const tbody = document.getElementById('dataTableBody');
+    const netClass = metrics.net < 0 ? ' class="negative-val"' : '';
+    tbody.innerHTML = `
+      <tr>
+        <td class="service-col">${metrics.role}</td>
+        <td>${rateFormatted}</td>
+        <td>${formatCurrency(metrics.gross)}</td>
+        <td${netClass}>${formatCurrency(metrics.net)}</td>
+        <td>${formatCurrency(metrics.facilityFee)}</td>
+        <td>${formatCurrency(metrics.royaltyFee)}</td>
+      </tr>
+    `;
+  }
+
+  // Event Listeners for mutually updatable work-metric fields
+  document.getElementById('daysWorked').addEventListener('input', () => syncWorkInputs('daysWorked'));
+  document.getElementById('hoursWorked').addEventListener('input', () => syncWorkInputs('hoursWorked'));
+  document.getElementById('weeksWorked').addEventListener('input', () => syncWorkInputs('weeksWorked'));
+
+  // Enforce strict numeric-only entry on Monthly Franchise Fee text box
+  const monthlyFeeInput = document.getElementById('monthlyFranchiseFee');
+  monthlyFeeInput.addEventListener('input', function () {
+    let cleaned = this.value.replace(/[^0-9.]/g, '');
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    if (this.value !== cleaned) {
+      this.value = cleaned;
+    }
+    updateView();
+  });
+
+  // Event Listeners for Advisory Rate and Currency
+  document.getElementById('advisoryRate').addEventListener('input', updateView);
+  document.getElementById('currencySelect').addEventListener('change', updateView);
+
+  // Initial Render & Live Exchange Rate Fetch on Page Load
+  updateView();
+  loadExchangeRateFromFrankfurter();
+</script>
+
+</body>
+</html>
