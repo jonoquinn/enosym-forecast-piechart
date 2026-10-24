@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Annual Revenue Projections</title>
+  <title>Annual Enosym Revenue Projections</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -439,7 +439,7 @@
 
 <div class="container">
   <header class="page-header">
-    <h1>Annual Revenue Projections</h1>
+    <h1>Annual Enosym Revenue Projections</h1>
     <p>Interactive annual financial breakdown for a single advisory rate</p>
   </header>
 
@@ -512,7 +512,7 @@
         </div>
 
         <div class="assumptions-note">
-          Assumes an <strong>8-hour</strong> working day, <strong>5 working days</strong> per week, and a <strong>€15/hr</strong> revenue royalty fee.
+          Assumes an <strong>8-hour</strong> working day, <strong>5 working days</strong> per week, and a <strong id="royaltyRateAssumption">€15/hr</strong> revenue royalty fee.
           <span id="exchangeRateNote">Exchange rate: <strong>1 EURO = 0.84 GBP</strong> (loading live rate from api.frankfurter.dev...).</span>
         </div>
       </div>
@@ -583,6 +583,12 @@
   // Active exchange rate (initialized to default fallback until Frankfurter responds)
   let currentEurToGbpRate = DEFAULT_EUR_TO_GBP_RATE;
 
+  // Track active currency and underlying EUR base values so switching EUR <-> GBP
+  // converts the input fields accurately without rounding drift
+  let activeCurrency = 'EUR';
+  let baseAdvisoryRateEur = 100;
+  let baseMonthlyFeeEur = 750;
+
   // Threshold: segments strictly less than 5% appear as connected outside labels
   const OUTSIDE_LABEL_THRESHOLD = 0.05;
 
@@ -607,10 +613,40 @@
     return Number(val.toFixed(2));
   }
 
+  // Format hourly rate display (integer if whole, otherwise 2 decimal places)
+  function formatRateDisplay(val) {
+    const rounded = Math.round(val * 100) / 100;
+    return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(2);
+  }
+
   // Format break-even numbers to 1 decimal place (or integer if exact)
   function formatBreakEvenMetric(val) {
     const rounded = Math.round(val * 10) / 10;
     return Number.isInteger(rounded) ? rounded.toLocaleString('en-IE') : rounded.toFixed(1);
+  }
+
+  // =========================================================================
+  // CONVERT PARAMETER INPUT FIELDS WHEN CURRENCY CHANGES
+  // =========================================================================
+  function handleCurrencyChange() {
+    const newCurrency = document.getElementById('currencySelect').value;
+    if (newCurrency === activeCurrency) return;
+
+    const advisoryInput = document.getElementById('advisoryRate');
+    const monthlyFeeInput = document.getElementById('monthlyFranchiseFee');
+
+    if (newCurrency === 'GBP') {
+      // Convert from EUR to GBP using the exchange rate
+      advisoryInput.value = formatCleanNumber(baseAdvisoryRateEur * currentEurToGbpRate);
+      monthlyFeeInput.value = formatCleanNumber(baseMonthlyFeeEur * currentEurToGbpRate);
+    } else {
+      // Convert from GBP back to EUR using the exchange rate
+      advisoryInput.value = formatCleanNumber(baseAdvisoryRateEur);
+      monthlyFeeInput.value = formatCleanNumber(baseMonthlyFeeEur);
+    }
+
+    activeCurrency = newCurrency;
+    updateView();
   }
 
   // =========================================================================
@@ -664,6 +700,14 @@
         const dateSuffix = rateDate ? ` as of ${rateDate}` : '';
         rateNoteEl.innerHTML =
           `Live exchange rate (api.frankfurter.dev${dateSuffix}): <strong>1 EURO = ${currentEurToGbpRate.toFixed(4)} GBP</strong> (1 GBP = ${gbpToEur.toFixed(4)} EURO).`;
+
+        // If GBP is already selected when the live rate arrives, refresh the converted parameter boxes
+        if (activeCurrency === 'GBP') {
+          document.getElementById('advisoryRate').value =
+            formatCleanNumber(baseAdvisoryRateEur * currentEurToGbpRate);
+          document.getElementById('monthlyFranchiseFee').value =
+            formatCleanNumber(baseMonthlyFeeEur * currentEurToGbpRate);
+        }
       } else {
         throw new Error('Invalid rate payload from Frankfurter API');
       }
@@ -717,13 +761,17 @@
     document.getElementById('advisoryRateLabel').textContent = `Advisory Rate (${symbol}/hr)`;
     document.getElementById('monthlyFranchiseFeeLabel').textContent = `Monthly Franchise Fee (${symbol})`;
 
-    // Annual Franchise/Facility Fee is 12x the Monthly Franchise Fee entered in the active currency
+    // Annual Franchise/Facility Fee is 12x the Monthly Franchise Fee in the active currency
     const facilityFee = monthlyFranchiseFee * MONTHS_PER_YEAR;
 
     // Convert the €15/hr Revenue Royalty Fee to GBP if GBP is selected
     const conversionFactor = currency === 'GBP' ? currentEurToGbpRate : 1;
     const hourlyRoyaltyRate = ROYALTY_PER_HOUR_EUR * conversionFactor;
     const royaltyFee = annualHours * hourlyRoyaltyRate;
+
+    // Dynamically update the royalty fee text in the Assumptions box
+    document.getElementById('royaltyRateAssumption').textContent =
+      `${symbol}${formatRateDisplay(hourlyRoyaltyRate)}/hr`;
 
     const gross = annualHours * advisoryRate;
     const net = gross - facilityFee - royaltyFee;
@@ -1037,7 +1085,7 @@
       document.getElementById('breakEvenHours').value = 'N/A';
       document.getElementById('breakEvenWeeks').value = 'N/A';
       beNoteEl.innerHTML =
-        `<span class="negative-val">Break-even cannot be reached when the Advisory Rate is at or below the ${symbol}${formatCleanNumber(metrics.hourlyRoyaltyRate)}/hr royalty fee.</span>`;
+        `<span class="negative-val">Break-even cannot be reached when the Advisory Rate is at or below the ${symbol}${formatRateDisplay(metrics.hourlyRoyaltyRate)}/hr royalty fee.</span>`;
     }
 
     // Handle negative Net Revenue notice if recurring costs exceed gross revenue
@@ -1078,7 +1126,14 @@
   document.getElementById('hoursWorked').addEventListener('input', () => syncWorkInputs('hoursWorked'));
   document.getElementById('weeksWorked').addEventListener('input', () => syncWorkInputs('weeksWorked'));
 
-  // Enforce strict numeric-only entry on Monthly Franchise Fee text box
+  // Event Listener for Advisory Rate (updates underlying base EUR value when edited)
+  document.getElementById('advisoryRate').addEventListener('input', function () {
+    const val = Math.max(0, parseFloat(this.value) || 0);
+    baseAdvisoryRateEur = activeCurrency === 'GBP' ? (val / currentEurToGbpRate) : val;
+    updateView();
+  });
+
+  // Enforce strict numeric-only entry on Monthly Franchise Fee text box & update base EUR value
   const monthlyFeeInput = document.getElementById('monthlyFranchiseFee');
   monthlyFeeInput.addEventListener('input', function () {
     let cleaned = this.value.replace(/[^0-9.]/g, '');
@@ -1089,12 +1144,13 @@
     if (this.value !== cleaned) {
       this.value = cleaned;
     }
+    const val = Math.max(0, parseFloat(this.value) || 0);
+    baseMonthlyFeeEur = activeCurrency === 'GBP' ? (val / currentEurToGbpRate) : val;
     updateView();
   });
 
-  // Event Listeners for Advisory Rate and Currency
-  document.getElementById('advisoryRate').addEventListener('input', updateView);
-  document.getElementById('currencySelect').addEventListener('change', updateView);
+  // Event Listener for Currency Selector (converts Advisory Rate & Monthly Franchise Fee)
+  document.getElementById('currencySelect').addEventListener('change', handleCurrencyChange);
 
   // Initial Render & Live Exchange Rate Fetch on Page Load
   updateView();
