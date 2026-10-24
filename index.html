@@ -36,6 +36,7 @@
       color: var(--text-primary);
       padding: 32px 24px;
       line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
     }
 
     .container {
@@ -44,7 +45,7 @@
     }
 
     header.page-header {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     header.page-header h1 {
@@ -52,6 +53,7 @@
       font-weight: 700;
       letter-spacing: -0.02em;
       color: var(--text-primary);
+      line-height: 1.25;
     }
 
     header.page-header p {
@@ -69,12 +71,6 @@
       margin-bottom: 28px;
     }
 
-    @media (max-width: 1060px) {
-      .top-layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .right-panels {
       display: flex;
       flex-direction: column;
@@ -87,6 +83,7 @@
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      min-width: 0;
     }
 
     .chart-card {
@@ -115,6 +112,7 @@
     .chart-title-group span {
       font-size: 0.85rem;
       color: var(--text-secondary);
+      display: block;
     }
 
     .total-revenue-label {
@@ -128,7 +126,7 @@
     }
 
     .total-revenue-label .tr-caption {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -156,7 +154,8 @@
     .chart-wrapper {
       position: relative;
       flex: 1;
-      min-height: 430px;
+      height: 430px;
+      min-height: 400px;
       width: 100%;
     }
 
@@ -178,17 +177,18 @@
     /* Adjacent Text Boxes Group */
     .adjacent-boxes {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
     .two-col-boxes {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
     .field-box {
+      min-width: 0;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       overflow: hidden;
@@ -206,24 +206,30 @@
       background-color: var(--shade-label);
       color: var(--text-primary);
       font-weight: 600;
-      font-size: 0.75rem;
-      padding: 7px 8px;
+      font-size: 0.74rem;
+      padding: 7px 6px;
       border-bottom: 1px solid var(--border-color);
       text-align: center;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
+    /* 16px (1rem) prevents iOS Safari from auto-zooming on input focus */
     .field-input {
       width: 100%;
       border: none;
-      padding: 9px 8px;
+      padding: 9px 6px;
       font-family: inherit;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 600;
       text-align: center;
       color: var(--text-primary);
       background: #ffffff;
       outline: none;
+      border-radius: 0;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .field-input[readonly] {
@@ -236,12 +242,16 @@
       cursor: pointer;
       text-align: center;
       text-align-last: center;
+      padding-right: 18px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
     }
 
     /* Horizontal Box for Monthly Franchise Fee */
     .horizontal-field-box {
       display: grid;
-      grid-template-columns: 1fr 135px;
+      grid-template-columns: 1fr 125px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       overflow: hidden;
@@ -260,8 +270,10 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding: 9px 14px;
-      font-size: 0.86rem;
+      padding: 9px 12px;
+      font-size: 0.84rem;
+      white-space: normal;
+      text-align: left;
     }
 
     .assumptions-note {
@@ -284,6 +296,7 @@
 
     .table-container {
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border: 1px solid var(--border-color);
       border-radius: 8px;
     }
@@ -300,6 +313,7 @@
       border-bottom: 1px solid var(--border-light);
       border-right: 1px solid var(--border-light);
       text-align: right;
+      white-space: nowrap;
     }
 
     table.projection-table th:last-child,
@@ -344,6 +358,80 @@
     .negative-val {
       color: var(--negative-red);
       font-weight: 600;
+    }
+
+    /* Tablet & Mobile Responsive Breakpoints */
+    @media (max-width: 1060px) {
+      .top-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px 12px 28px;
+      }
+
+      header.page-header {
+        margin-bottom: 16px;
+      }
+
+      header.page-header h1 {
+        font-size: 1.45rem;
+      }
+
+      header.page-header p {
+        font-size: 0.88rem;
+      }
+
+      .top-layout,
+      .right-panels {
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .total-revenue-label {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 14px;
+      }
+
+      .total-revenue-label .tr-amount {
+        font-size: 1.25rem;
+      }
+
+      .chart-wrapper {
+        height: 330px;
+        min-height: 310px;
+      }
+
+      .adjacent-boxes {
+        gap: 8px;
+      }
+
+      .field-label {
+        font-size: 0.7rem;
+        padding: 6px 4px;
+      }
+
+      table.projection-table {
+        font-size: 0.82rem;
+      }
+
+      table.projection-table th,
+      table.projection-table td {
+        padding: 10px 10px;
+      }
     }
   </style>
 </head>
@@ -686,6 +774,7 @@
       });
       if (total <= 0) return;
 
+      const isCompact = chart.width < 480;
       const ctx = chart.ctx;
       ctx.save();
 
@@ -719,7 +808,8 @@
           const labelX = x + cosA * labelRadius;
           const labelY = y + sinA * labelRadius;
 
-          ctx.font = '700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          const fontSize = isCompact ? 11.5 : 13;
+          ctx.font = `700 ${fontSize}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
           ctx.fillStyle = index === 2 ? '#0f172a' : '#ffffff';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -730,7 +820,7 @@
           // -----------------------------------------------------------------
           const startX = x + cosA * outerRadius;
           const startY = y + sinA * outerRadius;
-          const radialDist = outerRadius + 18;
+          const radialDist = outerRadius + (isCompact ? 14 : 18);
           const rawElbowX = x + cosA * radialDist;
           const rawElbowY = y + sinA * radialDist;
           const isRightSide = cosA >= 0;
@@ -761,8 +851,8 @@
           .sort((a, b) => a.elbowY - b.elbowY);
 
         const minGap = 24;
-        const minY = 20;
-        const maxY = chart.height - 54;
+        const minY = 16;
+        const maxY = chart.height - 56;
 
         for (let i = 0; i < group.length; i++) {
           if (group[i].elbowY < minY) group[i].elbowY = minY;
@@ -773,31 +863,38 @@
         }
       });
 
-      // Draw each external connected callout with canvas-boundary clamping
-      ctx.font = '600 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const edgeMargin = 10;
-      const textGap = 6;
+      // Draw each external connected callout with canvas-boundary clamping & readable pill backdrop
+      const calloutFontSize = isCompact ? 11 : 12;
+      ctx.font = `600 ${calloutFontSize}px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      const edgeMargin = 8;
+      const textGap = 5;
 
       externalCallouts.forEach(item => {
-        const labelText = `${item.label}: ${formatCurrency(item.value)}`;
+        const shortLabel = isCompact
+          ? item.label.replace(/^Annual\s+/i, '')
+          : item.label;
+        const labelText = `${shortLabel}: ${formatCurrency(item.value)}`;
         const textWidth = ctx.measureText(labelText).width;
 
         let elbowX = item.elbowX;
-        let endX = elbowX + (item.isRightSide ? 16 : -16);
+        let endX = elbowX + (item.isRightSide ? 14 : -14);
 
-        // Clamp horizontal leader line & elbow so text never clips off the left or right canvas border
+        // Clamp horizontal position so label text never clips off the left or right canvas border
+        let textX;
         if (item.isRightSide) {
           const maxEndX = chart.width - edgeMargin - textGap - textWidth;
           if (endX > maxEndX) {
-            endX = Math.max(item.startX + 4, maxEndX);
+            endX = Math.max(edgeMargin, maxEndX);
             if (elbowX > endX) elbowX = endX;
           }
+          textX = endX + textGap;
         } else {
           const minEndX = edgeMargin + textGap + textWidth;
           if (endX < minEndX) {
-            endX = Math.min(item.startX - 4, minEndX);
+            endX = Math.min(chart.width - edgeMargin, minEndX);
             if (elbowX < endX) elbowX = endX;
           }
+          textX = endX - textGap - textWidth;
         }
 
         // Connected leader line
@@ -811,15 +908,22 @@
 
         // Anchor dot on slice edge
         ctx.beginPath();
-        ctx.arc(item.startX, item.startY, 2.8, 0, Math.PI * 2);
+        ctx.arc(item.startX, item.startY, 2.6, 0, Math.PI * 2);
         ctx.fillStyle = item.sliceColor;
         ctx.fill();
 
+        // Subtle pill background behind callout text for guaranteed legibility on mobile
+        const padX = 4;
+        const padY = 3;
+        const boxHeight = calloutFontSize + padY * 2;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.fillRect(textX - padX, item.elbowY - boxHeight / 2, textWidth + padX * 2, boxHeight);
+
         // Label text outside the segment
         ctx.fillStyle = '#0f172a';
-        ctx.textAlign = item.isRightSide ? 'left' : 'right';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(labelText, endX + (item.isRightSide ? textGap : -textGap), item.elbowY);
+        ctx.fillText(labelText, textX, item.elbowY);
       });
 
       ctx.restore();
@@ -829,7 +933,7 @@
   Chart.register(pieSegmentLabelsPlugin);
 
   // =========================================================================
-  // INITIALIZE PIE CHART WITH INITIAL METRICS
+  // INITIALIZE PIE CHART WITH RESPONSIVE PADDING FOR MOBILE & DESKTOP
   // =========================================================================
   const initialMetrics = computeMetrics();
   const ctx = document.getElementById('enosymPieChart').getContext('2d');
@@ -864,23 +968,27 @@
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: {
-          top: 40,
-          bottom: 16,
-          left: 195,
-          right: 195
+        // Dynamic padding: prevents narrow portrait mobile screens from collapsing the pie
+        padding: function(context) {
+          const w = context.chart.width || window.innerWidth;
+          if (w < 420) {
+            return { top: 28, bottom: 8, left: 16, right: 16 };
+          } else if (w < 640) {
+            return { top: 32, bottom: 12, left: 64, right: 64 };
+          }
+          return { top: 38, bottom: 16, left: 165, right: 165 };
         }
       },
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            boxWidth: 14,
-            boxHeight: 14,
-            padding: 20,
+            boxWidth: 13,
+            boxHeight: 13,
+            padding: 14,
             color: '#334155',
             font: {
-              size: 12.5,
+              size: 12,
               weight: '600'
             }
           }
@@ -901,7 +1009,7 @@
   });
 
   // =========================================================================
-  // DYNAMIC VIEW UPDATE 
+  // DYNAMIC VIEW UPDATE
   // =========================================================================
   function updateView() {
     const metrics = computeMetrics();
